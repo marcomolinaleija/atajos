@@ -1,16 +1,12 @@
-# Atajos de Teclado con AutoHotkey
+# Atajos para Windows
 
-Este script de AutoHotkey proporciona una serie de atajos y herramientas para mejorar la productividad en Windows. Ofrece un menú centralizado para acceder a diversas funciones del sistema, aplicaciones y utilidades personalizadas.
-
-## Requisitos
-
-- [AutoHotkey](https.www.autohotkey.com/) instalado en tu sistema.
+Este programa proporciona una serie de atajos y herramientas para mejorar la productividad en Windows. Ofrece un menú centralizado para acceder a diversas funciones del sistema, aplicaciones y utilidades personalizadas.
 
 ## Cómo Empezar
 
-1.  Asegúrate de tener AutoHotkey instalado.
-2.  Ejecuta el archivo `atajos.ahk`.
-3.  El script se ejecutará en segundo plano y mostrará un ícono en la bandeja del sistema.
+1.  Descarga la última versión del ejecutable desde la sección de [Releases](https://github.com/marcomolinaleija/atajos/releases).
+2.  Ejecuta el archivo `atajos.exe`.
+3.  El programa se ejecutará en segundo plano y mostrará un ícono en la bandeja del sistema.
 
 ## Menú Principal
 
