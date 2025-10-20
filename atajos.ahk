@@ -40,7 +40,6 @@ menu, herramientas, Add, convertir un número de teléfono de what sapp en un en
 menu, herramientas, Add, Buscar la definición de una palabra en la rae, buscarRae
 menu, herramientas, Add, Convertir un audio utilizando ffmpeg, fmp
 menu, herramientas, Add, Filtrar enlaces para copiar o ejecutar en el texto del portapapeles, links
-menu, herramientas, Add, Subir archivo, UploadFiles
 Menu, menuName, Add, Sistema, :Sistema
 Menu, menuName, Add, Archivos y Carpetas, :Archivos
 menu, menuName, Add, aplicaciones, :apps
@@ -315,7 +314,7 @@ return RTrim(formattedHotkey, "+")
 }
 InitializeActionList() {
 global actionList
-actionList := ["Seleccionar Dispositivos", "Abrir el Registro de Windows", "Mezclador de Volumen", "Ver Información del Sistema", "Saber Versión de Windows", "Panel de Control", "Programar el Apagado", "Forzar el Cierre de un Programa", "Abrir Programas de Inicio", "Archivos Temporales", "AppData", "Abrir Spotify", "Abrir Word", "Abrir WhatsApp", "Abrir Unigram", "Abrir ML-Player", "Documentación", "Convertir Enlace de Google Drive", "Convertir número de WhatsApp", "Buscar en RAE", "Convertir audio con FFmpeg", "Filtrar enlaces para copiar o ejecutar en el texto del portapapeles", "Gestionar Atajos de teclado", "Gestionar Rutas/Ejecutables", "Subir archivo"]
+actionList := ["Seleccionar Dispositivos", "Abrir el Registro de Windows", "Mezclador de Volumen", "Ver Información del Sistema", "Saber Versión de Windows", "Panel de Control", "Programar el Apagado", "Forzar el Cierre de un Programa", "Abrir Programas de Inicio", "Archivos Temporales", "AppData", "Abrir Spotify", "Abrir Word", "Abrir WhatsApp", "Abrir Unigram", "Abrir ML-Player", "Documentación", "Convertir Enlace de Google Drive", "Convertir número de WhatsApp", "Buscar en RAE", "Convertir audio con FFmpeg", "Filtrar enlaces para copiar o ejecutar en el texto del portapapeles", "Gestionar Atajos de teclado", "Gestionar Rutas/Ejecutables"]
 }
 ShowHotkeyManager:
 Gui, New, , Gestor de Atajos de teclado
@@ -417,8 +416,7 @@ static actionMap := {"Seleccionar Dispositivos": "s"
 ,"Convertir audio con FFmpeg": "fmp"
 , "Gestionar Atajos de teclado": "ShowHotkeyManager"
 , "Gestionar Rutas/Ejecutables": "ShowPathManager"
-, "Filtrar enlaces para copiar o ejecutar en el texto del portapapeles": "links"
-, "Subir archivo": "UploadFiles"}
+, "Filtrar enlaces para copiar o ejecutar en el texto del portapapeles": "links"}
 if (actionMap.HasKey(action)) {
 label := actionMap[action]
 if (IsLabel(label)) {
@@ -746,125 +744,7 @@ GuiEscape:
 CloseInterfaz:
 Gui, Destroy
 return
-UploadFiles:
-Gui, +LabelGui
-Gui, Font, s10
-Gui, Add, Text, x10 y10, Seleccione un archivo para subir:
-Gui, Add, Button, x10 y35 w150 h30 gSelectFile, Seleccionar &Archivo
-Gui, Add, Text, x10 y80, Archivo seleccionado:
-Gui, Add, Edit, x170 y35 w270 h30 vSelectedFile ReadOnly
-Gui, Add, Text, x10 y80, &Nombre personalizado para el enlace (opcional):
-Gui, Add, Edit, x10 y105 w430 h30 vCustomPath
-Gui, Add, Text, x10 y140 cGray
-Gui, Add, Text, x10 y175, &Tiempo de expiración en horas:
-Gui, Add, Edit, x10 y200 w100 h30 vExpireTime, 24
-Gui, Add, Button, x10 y245 w150 h30 gUploadFile Default, &Subir Archivo
-Gui, Add, Button, x10 y245 w150 h30 GCloseInterfaz, &Cerrar
-Gui, Add, Progress, x10 y290 w430 h20 vProgressBar
-Gui, Add, Text, x10 y320 w430 vStatus
-Gui, Show, w450 h350, Subir Archivo - Marco ML
-return
-SelectFile:
-FileSelectFile, filePath, 3,, Seleccionar archivo para subir
-if (filePath) {
-GuiControl,, SelectedFile, %filePath%
-SoundPlay *-1
-}
-return
-ValidateCustomPath(customPath, checkUrl) {
-if (!customPath)
-return true
-http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-url := checkUrl . "?name=" . customPath
-try {
-http.Open("GET", url, false)
-http.Send()
-response := http.ResponseText
-if (InStr(response, """exists"":true")) {
-return false
-}
-return true
-} catch e {
-MsgBox, 16, Error de validación, No se pudo verificar el nombre personalizado.`nError: %e%
-return false
-}
-}
-UploadFile:
-Gui, Submit, NoHide
-if (!SelectedFile) {
-MsgBox, 48, Archivo requerido, Por favor, selecciona primero un archivo para subir.
-return
-}
-FileGetSize, fileSize, %SelectedFile%
-if (fileSize > 1073741824) {
-MsgBox, 48, Archivo demasiado grande, El archivo supera el límite de 1GB permitido.`nPor favor, selecciona un archivo más pequeño.
-return
-}
-if (ExpireTime <= 0 || ExpireTime > 168) {
-MsgBox, 48, Tiempo inválido, El tiempo de expiración debe estar entre 1 y 168 horas (7 días).
-return
-}
-if (CustomPath) {
-GuiControl,, Status, Verificando disponibilidad del nombre...
-if (!ValidateCustomPath(CustomPath, "https://marco-ml.com/files/api/check.php")) {
-MsgBox, 48, Nombre no disponible, El nombre personalizado "%CustomPath%" ya está en uso.`nPor favor, elija otro nombre.
-return
-}
-}
-http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-url := "https://marco-ml.com/files/api/upload.php"
-boundary := "------------------------" . A_Now . A_MSec
-FileRead, fileContent, *c %SelectedFile%
-SplitPath, SelectedFile, fileName
-GuiControl,, Status, Preparando archivo para subir...
-GuiControl,, ProgressBar, 20
-data := "--" boundary "`r`n"
-data .= "Content-Disposition: form-data; name=""file""; filename=""" fileName """`r`n"
-data .= "Content-Type: application/octet-stream`r`n`r`n"
-data .= fileContent
-data .= "`r`n"
-if (CustomPath) {
-data .= "--" boundary "`r`n"
-data .= "Content-Disposition: form-data; name=""custom_path""`r`n`r`n"
-data .= CustomPath "`r`n"
-}
-data .= "--" boundary "`r`n"
-data .= "Content-Disposition: form-data; name=""expire""`r`n`r`n"
-data .= ExpireTime "`r`n"
-data .= "--" boundary "--`r`n"
-try {
-GuiControl,, Status, Subiendo archivo...
-GuiControl,, ProgressBar, 40
-http.Open("POST", url, true)
-http.SetRequestHeader("Content-Type", "multipart/form-data; boundary=" boundary)
-http.Send(data)
-GuiControl,, ProgressBar, 70
-http.WaitForResponse()
-GuiControl,, ProgressBar, 90
-response := http.ResponseText
-if (RegExMatch(response, """download_link"":""([^""]+)""", downloadLink)) {
-GuiControl,, ProgressBar, 100
-downloadLink1 := RegExReplace(downloadLink1, "\\\/", "/")
-Clipboard := downloadLink1
-successMsg := "¡Archivo subido exitosamente!`n`n"
-successMsg .= "El enlace ha sido copiado al portapapeles:`n"
-successMsg .= downloadLink1 "`n`n"
-successMsg .= "Presiona Aceptar para continuar."
-SoundPlay *64
-MsgBox, 64, Subida Exitosa, %successMsg%
-GuiControl,, SelectedFile,
-GuiControl,, CustomPath,
-GuiControl,, ExpireTime, 24
-GuiControl,, Status, Listo para nueva subida
-} else {
-throw "Respuesta del servidor inválida"
-}
-} catch e {
-GuiControl,, ProgressBar, 0
-SoundPlay *16
-MsgBox, 16, Error de subida, Ha ocurrido un error al subir el archivo:`n%e%
-}
-return
+
 GuiClose:
 CloseInterfaz1:
 Gui, Destroy
