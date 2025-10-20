@@ -182,10 +182,10 @@ Clipboard := convertedLink
 }
 return
 IsGoogleDriveLink(link) {
-return RegExMatch(link, "drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+")
+return RegExMatch(link, "drive\.google\.com\/(?:file\/d\/|open\?id=)([a-zA-Z0-9_-]+)")
 }
 ConvertGoogleDriveLink(link) {
-RegExMatch(link, "drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)", match)
+RegExMatch(link, "drive\.google\.com\/(?:file\/d\/|open\?id=)([a-zA-Z0-9_-]+)", match)
 file_id := match1
 return "https://drive.google.com/uc?export=download&id=" . file_id
 }
