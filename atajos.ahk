@@ -548,7 +548,8 @@ Gui, PathManager:Add, Text, x10 y10 w100, &Nombre:
 Gui, PathManager:Add, Edit, x10 y30 w150 vPathNameInput
 Gui, PathManager:Add, Text, x170 y10 w250, &Ruta (Carpeta o Ejecutable):
 Gui, PathManager:Add, Edit, x170 y30 w250 vPathLocationInput
-Gui, PathManager:Add, Button, x430 y30 w80 gSelectFileOrFolder, &Explorar...
+Gui, PathManager:Add, Button, x430 y30 w100 gSelectFolder, &Seleccionar Carpeta...
+Gui, PathManager:Add, Button, x540 y30 w100 gSelectFile, &Seleccionar Archivo...
 Gui, PathManager:Add, Text, x10 y60 w100, &Atajo (Opcional):
 Gui, PathManager:Add, Hotkey, x10 y80 w150 vPathHotkeyInput
 Gui, PathManager:Add, Button, x170 y80 w100 gAddPath, &Añadir
@@ -562,30 +563,33 @@ Gui, PathManager:Show, w520 h370
 return
 
 PathListClick:
+Gui, PathManager:Default
 if (A_GuiEvent = "DoubleClick") {
-Gosub, EditPath
+    Gosub, EditPath
 } else {
-selectedRow := LV_GetNext(0)
-if (selectedRow > 0) {
-LV_GetText(name, selectedRow, 1)
-LV_GetText(path, selectedRow, 2)
-LV_GetText(hotkey, selectedRow, 3)
-GuiControl, PathManager:, PathNameInput, %name%
-GuiControl, PathManager:, PathLocationInput, %path%
-GuiControl, PathManager:, PathHotkeyInput, %hotkey%
-}
+    selectedRow := LV_GetNext(0)
+    if (selectedRow > 0) {
+        LV_GetText(name, selectedRow, 1)
+        LV_GetText(path, selectedRow, 2)
+        LV_GetText(hotkey, selectedRow, 3)
+        GuiControl, , PathNameInput, %name%
+        GuiControl, , PathLocationInput, %path%
+        GuiControl, , PathHotkeyInput, %hotkey%
+    }
 }
 return
 
-SelectFileOrFolder:
+SelectFolder:
 FileSelectFolder, selectedFolder, , 3, Selecciona una Carpeta
 if (selectedFolder != "") {
-GuiControl, PathManager:, PathLocationInput, %selectedFolder%
-} else {
+    GuiControl, PathManager:, PathLocationInput, %selectedFolder%
+}
+return
+
+SelectFile:
 FileSelectFile, selectedFile, , , Selecciona un Archivo
 if (selectedFile != "") {
-GuiControl, PathManager:, PathLocationInput, %selectedFile%
-}
+    GuiControl, PathManager:, PathLocationInput, %selectedFile%
 }
 return
 
@@ -635,77 +639,90 @@ MsgBox, 64, Información, Ruta añadida correctamente.
 return
 
 EditPath:
-Gui, PathManager:Submit, NoHide
 selectedRow := LV_GetNext(0)
 if (selectedRow = 0) {
-MsgBox, 16, Error, Por favor, selecciona una ruta para editar.
-return
+    MsgBox, 16, Error, Por favor, selecciona una ruta para editar.
+    return
 }
-
-; Get original name from ListView
 LV_GetText(originalName, selectedRow, 1)
-
-; Find the object in pathsArray
-foundIndex := 0
-for index, pathObj in pathsArray {
-if (pathObj.name = originalName) {
-foundIndex := index
-break
-}
-}
-
-if (foundIndex = 0) {
-MsgBox, 16, Error, No se encontró la ruta original para editar.
+LV_GetText(originalPath, selectedRow, 2)
+LV_GetText(originalHotkey, selectedRow, 3)
+ShowEditPathGui(originalName, originalPath, originalHotkey, selectedRow)
 return
+
+ShowEditPathGui(name, path, hotkey, rowIndex) {
+    global EditGui_Name, EditGui_Path, EditGui_Hotkey, EditGui_RowIndex
+    EditGui_Name := name
+    EditGui_Path := path
+    EditGui_Hotkey := hotkey
+    EditGui_RowIndex := rowIndex
+
+    Gui, EditGui:New, , Editar Ruta
+    Gui, EditGui:Add, Text, , &Nombre:
+    Gui, EditGui:Add, Edit, vEditGui_Name w300, %name%
+    Gui, EditGui:Add, Text, , &Ruta:
+    Gui, EditGui:Add, Edit, vEditGui_Path w300, %path%
+    Gui, EditGui:Add, Text, , &Atajo:
+    Gui, EditGui:Add, Hotkey, vEditGui_Hotkey w300, %hotkey%
+    Gui, EditGui:Add, Button, gEditGui_Save default, &Guardar
+    Gui, EditGui:Add, Button, gEditGui_Cancel, Cancelar
+    Gui, EditGui:Show
+    return
 }
+
+EditGui_Cancel:
+EditGui_Close:
+Gui, EditGui:Destroy
+return
+
+EditGui_Save:
+Gui, EditGui:Submit, NoHide
 
 ; Check if new name conflicts with others (excluding itself)
 for index, pathObj in pathsArray {
-if (index != foundIndex && pathObj.name = PathNameInput) {
-MsgBox, 16, Error, Ya existe otra ruta con el nuevo nombre.
-return
-}
+    if (index != EditGui_RowIndex && pathObj.name = EditGui_Name) {
+        MsgBox, 16, Error, Ya existe otra ruta con el nuevo nombre.
+        return
+    }
 }
 
 ; Check if path exists
-if (!FileExist(PathLocationInput)) {
-MsgBox, 16, Error, La ruta especificada no existe.
-return
+if (!FileExist(EditGui_Path)) {
+    MsgBox, 16, Error, La ruta especificada no existe.
+    return
 }
 
 ; Unregister old hotkey if it changed
-if (pathsArray[foundIndex].hotkey != "" && pathsArray[foundIndex].hotkey != PathHotkeyInput) {
-tempOldHotkey := pathsArray[foundIndex].hotkey ; Use a temporary variable
-Hotkey, %tempOldHotkey%, Off
+if (pathsArray[EditGui_RowIndex].hotkey != "" && pathsArray[EditGui_RowIndex].hotkey != EditGui_Hotkey) {
+    tempOldHotkey := pathsArray[EditGui_RowIndex].hotkey
+    Hotkey, %tempOldHotkey%, Off
 }
 
 ; Check if new hotkey conflicts with others (excluding itself)
-if (PathHotkeyInput != "") {
-for index, pathObj in pathsArray {
-if (index != foundIndex && pathObj.hotkey = PathHotkeyInput) {
-MsgBox, 16, Error, El atajo de teclado ya está en uso por otra ruta.
-return
-}
-}
+if (EditGui_Hotkey != "") {
+    for index, pathObj in pathsArray {
+        if (index != EditGui_RowIndex && pathObj.hotkey = EditGui_Hotkey) {
+            MsgBox, 16, Error, El atajo de teclado ya está en uso por otra ruta.
+            return
+        }
+    }
 }
 
 ; Update the object
-pathsArray[foundIndex].name := PathNameInput
-pathsArray[foundIndex].path := PathLocationInput
-pathsArray[foundIndex].hotkey := PathHotkeyInput
+pathsArray[EditGui_RowIndex].name := EditGui_Name
+pathsArray[EditGui_RowIndex].path := EditGui_Path
+pathsArray[EditGui_RowIndex].hotkey := EditGui_Hotkey
 
 SavePaths()
 
 ; Register new hotkey
-if (PathHotkeyInput != "") {
-tempNewHotkey := PathHotkeyInput ; Use a temporary variable
-Hotkey, %tempNewHotkey%, ExecutePath
+if (EditGui_Hotkey != "") {
+    tempNewHotkey := EditGui_Hotkey
+    Hotkey, %tempNewHotkey%, ExecutePath
 }
 
 UpdatePathListView()
-GuiControl, PathManager:, PathNameInput,
-GuiControl, PathManager:, PathLocationInput,
-GuiControl, PathManager:, PathHotkeyInput,
+Gui, EditGui:Destroy
 MsgBox, 64, Información, Ruta editada correctamente.
 return
 
