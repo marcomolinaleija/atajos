@@ -33,9 +33,7 @@ menu, apps, Add, spotify, sp
 menu, apps, Add, word, ww
 menu, apps, Add, what sapp, wha
 menu, apps, Add, unigram, :UnigramMenu
-menu, apps, Add, ml-player, ml
-menu, herramientas, Add, Documentación, doc
-Menu, Herramientas, Add, Convertir Enlace de Google Drive, converted
+menu, herramientas, Add, Convertir Enlace de Google Drive, converted
 menu, herramientas, Add, convertir un número de teléfono de what sapp en un enlace directo desde el portapapeles, ConvertWha
 menu, herramientas, Add, Buscar la definición de una palabra en la rae, buscarRae
 menu, herramientas, Add, Convertir un audio utilizando ffmpeg, fmp
@@ -109,18 +107,7 @@ return
 wha:
 run, whatsapp://
 return
-ml:
-UserProfile := A_UserProfile
-MLPlayerPath := UserProfile "\AppData\Local\ml-player\ml-player.exe"
-If FileExist(MLPlayerPath)
-{
-Run, %MLPlayerPath%
-}
-Else
-{
-MsgBox, El archivo ml-player.exe no se encontró en la ruta especificada.
-}
-return
+
 close:
 inputBox, programa, ¿Cuál es el programa a cerrar?, Escribe aquí
 if (ErrorLevel = 1) {
@@ -159,14 +146,7 @@ Run, shutdown.exe /a, Hide
 offScheduled := false
 Menu, Sistema, Rename, Cancelar Apagado Programado, Programar el Apagado
 return
-doc:
-FilePath := "C:\Program Files (x86)\atajos\doc.html"
-If FileExist(FilePath) {
-Run, %FilePath%
-} else {
-MsgBox, El archivo doc.html no se encuentra en la ubicación especificada.
-}
-return
+
 converted:
 SoundBeep, 500, 70
 InputBox, link, Convertidor de Enlaces, Por favor introduce el enlace de Google Drive
@@ -314,7 +294,7 @@ return RTrim(formattedHotkey, "+")
 }
 InitializeActionList() {
 global actionList
-actionList := ["Seleccionar Dispositivos", "Abrir el Registro de Windows", "Mezclador de Volumen", "Ver Información del Sistema", "Saber Versión de Windows", "Panel de Control", "Programar el Apagado", "Forzar el Cierre de un Programa", "Abrir Programas de Inicio", "Archivos Temporales", "AppData", "Abrir Spotify", "Abrir Word", "Abrir WhatsApp", "Abrir Unigram", "Abrir ML-Player", "Documentación", "Convertir Enlace de Google Drive", "Convertir número de WhatsApp", "Buscar en RAE", "Convertir audio con FFmpeg", "Filtrar enlaces para copiar o ejecutar en el texto del portapapeles", "Gestionar Atajos de teclado", "Gestionar Rutas/Ejecutables"]
+actionList := ["Seleccionar Dispositivos", "Abrir el Registro de Windows", "Mezclador de Volumen", "Ver Información del Sistema", "Saber Versión de Windows", "Panel de Control", "Programar el Apagado", "Forzar el Cierre de un Programa", "Abrir Programas de Inicio", "Archivos Temporales", "AppData", "Abrir Spotify", "Abrir Word", "Abrir WhatsApp", "Abrir Unigram", "Convertir Enlace de Google Drive", "Convertir número de WhatsApp", "Buscar en RAE", "Convertir audio con FFmpeg", "Filtrar enlaces para copiar o ejecutar en el texto del portapapeles", "Gestionar Atajos de teclado", "Gestionar Rutas/Ejecutables"]
 }
 ShowHotkeyManager:
 Gui, New, , Gestor de Atajos de teclado
@@ -408,8 +388,6 @@ static actionMap := {"Seleccionar Dispositivos": "s"
 ,"Abrir Word": "ww"
 ,"Abrir WhatsApp": "wha"
 ,"Abrir Unigram": "uni"
-,"Abrir ML-Player": "ml"
-,"Documentación": "doc"
 ,"Convertir Enlace de Google Drive": "converted"
 ,"Convertir número de WhatsApp": "ConvertWha"
 ,"Buscar en RAE": "buscarRae"
