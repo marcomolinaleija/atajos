@@ -207,18 +207,56 @@ ConvertWha:
 ClipSaved := ClipboardAll
 phonePattern := "(\+?\d{1,3})?[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
 if (RegExMatch(Clipboard, phonePattern, phoneNumber)) {
-cleanPhoneNumber := RegExReplace(phoneNumber, "\D")
-if (StrLen(cleanPhoneNumber) >= 10 && StrLen(cleanPhoneNumber) <= 12) {
-waLink := "https://wa.me/" . cleanPhoneNumber
-Run % waLink
+    ProcessPhoneNumber(phoneNumber)
 } else {
-MsgBox, 0, Error, El número no tiene entre 10 y 12 dígitos.
-}
-} else {
-MsgBox, 0, Error, No se encontró un número de teléfono.
+    InputBox, userInput, Convertir número de WhatsApp, No se encontró un número en el portapapeles. Ingrésalo aquí:
+    if (ErrorLevel == 0 && userInput != "") {
+        ProcessPhoneNumber(userInput)
+    } else {
+        MsgBox, 0, Cancelado, La operación fue cancelada.
+    }
 }
 Clipboard := ClipSaved
 return
+
+ProcessPhoneNumber(phoneNumber) {
+    cleanPhoneNumber := RegExReplace(phoneNumber, "\D")
+    if (StrLen(cleanPhoneNumber) >= 10 && StrLen(cleanPhoneNumber) <= 12) {
+        waLink := "https://wa.me/" . cleanPhoneNumber
+        ShowWhaGui(waLink)
+    } else {
+        MsgBox, 0, Error, El número no tiene entre 10 y 12 dígitos.
+    }
+}
+
+ShowWhaGui(link) {
+    global WhaLinkGlobal := link
+    Gui, WhaGui:New, , Enlace de WhatsApp Generado
+    Gui, WhaGui:Add, Text, , Enlace generado:
+    Gui, WhaGui:Add, Edit, w300 r1, %link%
+    Gui, WhaGui:Add, Button, gWhaCopy, &Copiar
+    Gui, WhaGui:Add, Button, gWhaOpen, &Abrir
+    Gui, WhaGui:Add, Button, gWhaClose, &Cerrar
+    Gui, WhaGui:Show
+    return
+}
+
+WhaGui_GuiEscape:
+WhaClose:
+Gui, WhaGui:Destroy
+return
+
+WhaCopy:
+Clipboard := WhaLinkGlobal
+MsgBox, 0, Copiado, El enlace ha sido copiado al portapapeles.
+Gui, WhaGui:Destroy
+return
+
+WhaOpen:
+Run, %WhaLinkGlobal%
+Gui, WhaGui:Destroy
+return
+
 links:
 contenidoPortapapeles := Clipboard
 regex := "https?://\S+"
