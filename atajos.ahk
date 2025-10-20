@@ -258,62 +258,74 @@ Gui, WhaGui:Destroy
 return
 
 links:
-contenidoPortapapeles := Clipboard
-regex := "https?://\S+"
-enlaces := []
-Loop
-{
-if RegExMatch(contenidoPortapapeles, regex, enlace)
-{
-enlaces.Push(enlace)
-contenidoPortapapeles := StrReplace(contenidoPortapapeles, enlace)
+    contenidoPortapapeles := Clipboard
+    regex := "https?://\S+"
+    enlaces := []
+    pos := 1
+    while pos := RegExMatch(contenidoPortapapeles, regex, enlace, pos)
+    {
+        enlaces.Push(enlace)
+        pos += StrLen(enlace)
+    }
+
+    if (enlaces.Length() = 0)
+    {
+        MsgBox, 16, Error, No se encontraron enlaces en el texto del portapapeles.
+        Return
+    }
+    
+    ShowLinksGui(enlaces)
+    return
+
+ShowLinksGui(enlaces) {
+    Gui, LinksGui:New, , Enlaces Encontrados
+    Gui, LinksGui:Add, text,, &Lista de enlaces
+    
+    linkString := ""
+    for index, enlace in enlaces
+        linkString .= enlace . "|"
+    
+    Gui, LinksGui:Add, ListBox, w600 r10, %linkString%
+    Gui, LinksGui:Add, Button, gLinksGui_CopiarEnlace, &Copiar Enlace
+    Gui, LinksGui:Add, Button, gLinksGui_AbrirEnlace, &Abrir Enlace
+    Gui, LinksGui:Add, Button, gLinksGui_Close, &Salir de la lista
+    Gui, LinksGui:Show
+    return
 }
-else
-break
-}
-if (enlaces.Length() = 0)
-{
-MsgBox, 16, Error, No se encontraron enlaces en el texto del portapapeles.
-Return
-}
-Gui, New
-Gui, Add, text,, &Lista de enlaces
-Gui, Add, ListBox, vListaEnlaces w600 r10,
-For each, enlace in enlaces
-GuiControl,, ListaEnlaces, %enlace%
-Gui, Add, Button, gCopiarEnlace x10 y+10 w120, &Copiar Enlace
-Gui, Add, Button, gAbrirEnlace x+10 y+-25 w120, &Abrir Enlace
-Gui, Add, Button, gCloseList x+10 y+-25 w120, &Salir de la lista
-Gui, Show,, Enlaces Encontrados
-Return
-CopiarEnlace:
-GuiControlGet, enlaceSeleccionado,, ListaEnlaces
-if (enlaceSeleccionado != "")
-{
-Clipboard := enlaceSeleccionado
-MsgBox, El enlace ha sido copiado al portapapeles:`n%enlaceSeleccionado%
-Gui, Destroy
-}
-else
-{
-MsgBox, Por favor, selecciona un enlace de la lista.
-}
-Return
-AbrirEnlace:
-GuiControlGet, enlaceSeleccionado,, ListaEnlaces
-if (enlaceSeleccionado != "")
-{
-Run, %enlaceSeleccionado%
-Gui, Destroy
-}
-else
-{
-MsgBox, Por favor, selecciona un enlace de la lista.
-}
-Return
-CloseList:
-Gui, Destroy
-Return
+
+LinksGui_GuiEscape:
+LinksGui_Close:
+    Gui, LinksGui:Destroy
+    return
+
+LinksGui_CopiarEnlace:
+    Gui, LinksGui:Default
+    GuiControlGet, enlaceSeleccionado, , ListBox1
+    if (enlaceSeleccionado != "")
+    {
+        Clipboard := enlaceSeleccionado
+        MsgBox, 0, Copiado, El enlace ha sido copiado al portapapeles.
+        Gui, LinksGui:Destroy
+    }
+    else
+    {
+        MsgBox, 16, Error, Por favor, selecciona un enlace de la lista.
+    }
+    return
+
+LinksGui_AbrirEnlace:
+    Gui, LinksGui:Default
+    GuiControlGet, enlaceSeleccionado, , ListBox1
+    if (enlaceSeleccionado != "")
+    {
+        Run, %enlaceSeleccionado%
+        Gui, LinksGui:Destroy
+    }
+    else
+    {
+        MsgBox, 16, Error, Por favor, selecciona un enlace de la lista.
+    }
+    return
 NumpadDel::
 Send, +{F10}
 return
